@@ -6,7 +6,7 @@ Phase-1 prototype for Chromebook attendance using Web Bluetooth + Supabase, depl
 
 - Web app with one `Check In` button.
 - Scan for teacher beacon service UUID `0000181c-0000-1000-8000-00805f9b34fb`.
-- Ask Supabase if student email is scheduled for that UUID right now.
+- Validate the UUID in `rooms`, then check `schedule` for `student_email + room_beacon_id + start_time <= current time`.
 - If scheduled, insert attendance row into `attendance_log`.
 - No FastAPI in this phase.
 
@@ -15,13 +15,16 @@ Phase-1 prototype for Chromebook attendance using Web Bluetooth + Supabase, depl
 - `docs/index.html`: GitHub Pages UI.
 - `docs/styles.css`: Page styling.
 - `docs/app.js`: Web Bluetooth + Supabase check-in logic.
-- `backend/sql/supabase_schema.sql`: SQL for `student_schedule` and `attendance_log`.
+- `backend/sql/supabase_schema.sql`: SQL for `rooms`, `schedule`, and `attendance_log`.
 
 ## Supabase Setup
 
-1. Open Supabase SQL Editor and run `backend/sql/supabase_schema.sql`.
-2. Confirm both tables exist: `student_schedule`, `attendance_log`.
-3. Insert or edit schedule rows so active class windows match your local time.
+1. If tables already exist, skip schema creation.
+2. Otherwise run `backend/sql/supabase_schema.sql` in Supabase SQL Editor.
+3. Confirm tables exist: `rooms`, `schedule`, `attendance_log`.
+4. Insert or verify rows in:
+   - `rooms`: `room_name`, `beacon_uuid`
+   - `schedule`: `student_email`, `room_beacon_id`, `start_time`
 4. In Supabase API settings, add your GitHub Pages origin to CORS allowed origins:
 	- `https://<your-github-username>.github.io`
 	- If repo pages path is required, still add only origin (no path).
@@ -50,7 +53,8 @@ Enter these in the app UI before check-in:
 
 - `SUPABASE_URL`
 - `SUPABASE_PUBLISHABLE_KEY`
-- Schedule table name (default `student_schedule`)
+- Schedule table name (default `schedule`)
+- Rooms table name (default `rooms`)
 - Attendance table name (default `attendance_log`)
 - Student email
 

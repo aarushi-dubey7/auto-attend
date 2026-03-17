@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student BLE Check-In</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        #status { margin-top: 20px; font-weight: bold; }
+        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #24b47e; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>Classroom Check-In</h1>
+    <p>Make sure your teacher's beacon is active.</p>
+    
+    <input type="email" id="email" placeholder="Enter your student email" style="padding:10px; width:250px;"><br><br>
+    
+    <button id="checkInBtn">Scan & Check In</button>
+
+    <div id="status">Ready to scan...</div>
+
+    <script>
+        // 1. YOUR CONNECTION DATA (From your API Keys screenshot)
+        const SUPABASE_URL = 'https://owwgynnsjwcltoxmkcfl.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 2. THE BEACON UUID WE FOUND
+        const BEACON_UUID = '0000181c-0000-1000-8000-00805f9b34fb';
+
+        document.getElementById('checkInBtn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            if (!email) { alert("Please enter your email first!"); return; }
+
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = "Searching for beacon...";
+
+            try {
+                // 3. SCAN FOR THE PHONE
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [BEACON_UUID] }]
+                });
+
+                statusDiv.innerText = "Beacon found! Checking schedule...";
+
+                // 4. CHECK SUPABASE IF STUDENT IS IN SCHEDULE
+                let { data: schedule, error } = await _supabase
+                    .from('schedule')
+                    .select('*')
+                    .eq('student_email', email)
+                    .eq('room_beacon_id', BEACON_UUID)
+                    .single();
+
+                if (error || !schedule) {
+                    statusDiv.innerText = "Error: You are not scheduled for this room.";
+                    console.error(error);
+                    return;
+                }
+
+                // 5. LOG THE ATTENDANCE
+                const { data, logError } = await _supabase
+                    .from('attendance_log')
+                    .insert([
+                        { 
+                            student_email: email, 
+                            room_name: "Room 101", // You can change this
+                            status: "Present" 
+                        }
+                    ]);
+
+                if (logError) throw logError;
+
+                statusDiv.innerHTML = "<span style='color:green'>SUCCESS! Attendance Recorded.</span>";
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerText = "Failed: " + err.message;
+            }
+        });
+    </script>
+</body>
+</html>

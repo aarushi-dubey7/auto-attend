@@ -1,12 +1,14 @@
 const REQUIRED_SERVICE_UUID = "0000181c-0000-1000-8000-00805f9b34fb";
+const DEFAULT_SUPABASE_URL = "https://owwgynnsjwcltoxmkcfl.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG";
 
 const el = {
   capabilityStatus: document.querySelector("#capabilityStatus"),
   studentEmail: document.querySelector("#studentEmail"),
-  studentName: document.querySelector("#studentName"),
   supabaseUrl: document.querySelector("#supabaseUrl"),
   supabaseKey: document.querySelector("#supabaseKey"),
   scheduleTable: document.querySelector("#scheduleTable"),
+  roomsTable: document.querySelector("#roomsTable"),
   attendanceTable: document.querySelector("#attendanceTable"),
   checkInBtn: document.querySelector("#checkInBtn"),
   resultBanner: document.querySelector("#resultBanner"),
@@ -17,6 +19,14 @@ const STORAGE_KEY = "auto-attend-checkin-config";
 
 function nowStamp() {
   return new Date().toISOString();
+}
+
+function currentLocalTime() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
 }
 
 function appendLog(message, level = "neutral") {
@@ -84,14 +94,14 @@ function loadSavedConfig() {
     if (saved.scheduleTable) {
       el.scheduleTable.value = saved.scheduleTable;
     }
+    if (saved.roomsTable) {
+      el.roomsTable.value = saved.roomsTable;
+    }
     if (saved.attendanceTable) {
       el.attendanceTable.value = saved.attendanceTable;
     }
     if (saved.studentEmail) {
       el.studentEmail.value = saved.studentEmail;
-    }
-    if (saved.studentName) {
-      el.studentName.value = saved.studentName;
     }
   } catch (error) {
     appendLog(`Could not restore saved config: ${error.message}`, "error");
@@ -102,10 +112,10 @@ function saveConfig() {
   const payload = {
     supabaseUrl: el.supabaseUrl.value.trim(),
     supabaseKey: el.supabaseKey.value.trim(),
-    scheduleTable: el.scheduleTable.value.trim() || "student_schedule",
+    scheduleTable: el.scheduleTable.value.trim() || "schedule",
+    roomsTable: el.roomsTable.value.trim() || "rooms",
     attendanceTable: el.attendanceTable.value.trim() || "attendance_log",
     studentEmail: normalizeEmail(el.studentEmail.value),
-    studentName: el.studentName.value.trim(),
   };
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -128,17 +138,34 @@ async function requestTeacherDevice() {
   });
 }
 
-async function fetchCurrentSchedule(client, table, studentEmail) {
-  const nowIso = nowStamp();
+async function fetchRoomByBeacon(client, table) {
+  const { data, error } = await client
+    .from(table)
+    .select("id, room_name, beacon_uuid")
+    .eq("beacon_uuid", REQUIRED_SERVICE_UUID)
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Room lookup failed: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  return data[0];
+}
+
+async function fetchSchedulePermission(client, table, studentEmail) {
+  const timeNow = currentLocalTime();
 
   const { data, error } = await client
     .from(table)
-    .select("id, student_email, service_uuid, classroom_label, starts_at, ends_at")
+    .select("id, student_email, room_beacon_id, start_time")
     .eq("student_email", studentEmail)
-    .eq("service_uuid", REQUIRED_SERVICE_UUID)
-    .lte("starts_at", nowIso)
-    .gte("ends_at", nowIso)
-    .order("starts_at", { ascending: false })
+    .eq("room_beacon_id", REQUIRED_SERVICE_UUID)
+    .lte("start_time", timeNow)
+    .order("start_time", { ascending: false })
     .limit(1);
 
   if (error) {
@@ -152,17 +179,11 @@ async function fetchCurrentSchedule(client, table, studentEmail) {
   return data[0];
 }
 
-async function insertAttendance(client, table, schedule, studentEmail, studentName, device) {
+async function insertAttendance(client, table, studentEmail, roomName) {
   const payload = {
-    schedule_id: schedule.id,
     student_email: studentEmail,
-    student_name: studentName || null,
-    service_uuid: REQUIRED_SERVICE_UUID,
-    classroom_label: schedule.classroom_label || null,
-    teacher_device_id: device.id || null,
-    teacher_device_name: device.name || "Unknown BLE Device",
-    checked_in_at: nowStamp(),
-    source: "github-pages-web-bluetooth",
+    room_name: roomName,
+    status: "Present",
   };
 
   const { error } = await client.from(table).insert(payload);
@@ -176,10 +197,10 @@ async function runCheckIn() {
   ensureBrowserSupport();
 
   const studentEmail = normalizeEmail(el.studentEmail.value);
-  const studentName = el.studentName.value.trim();
-  const supabaseUrl = el.supabaseUrl.value.trim();
-  const supabaseKey = el.supabaseKey.value.trim();
-  const scheduleTable = el.scheduleTable.value.trim() || "student_schedule";
+  const supabaseUrl = el.supabaseUrl.value.trim() || DEFAULT_SUPABASE_URL;
+  const supabaseKey = el.supabaseKey.value.trim() || DEFAULT_SUPABASE_ANON_KEY;
+  const scheduleTable = el.scheduleTable.value.trim() || "schedule";
+  const roomsTable = el.roomsTable.value.trim() || "rooms";
   const attendanceTable = el.attendanceTable.value.trim() || "attendance_log";
 
   if (!isValidEmail(studentEmail)) {
@@ -187,7 +208,7 @@ async function runCheckIn() {
   }
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Enter SUPABASE_URL and publishable key");
+    throw new Error("Enter SUPABASE_URL and SUPABASE_ANON_KEY");
   }
 
   const client = buildSupabaseClient(supabaseUrl, supabaseKey);
@@ -195,17 +216,25 @@ async function runCheckIn() {
   const teacherDevice = await requestTeacherDevice();
   appendLog(`BLE device selected: ${teacherDevice.name || "Unnamed"} (${teacherDevice.id})`, "ok");
 
-  appendLog(`Checking schedule for ${studentEmail} against UUID ${REQUIRED_SERVICE_UUID}...`);
-  const schedule = await fetchCurrentSchedule(client, scheduleTable, studentEmail);
+  appendLog(`Verifying beacon registry in ${roomsTable}...`);
+  const room = await fetchRoomByBeacon(client, roomsTable);
+  if (!room) {
+    setBanner("Beacon UUID not found in rooms registry.", "warn");
+    appendLog("No matching row in rooms table for required beacon_uuid.", "error");
+    return;
+  }
+
+  appendLog(`Beacon maps to ${room.room_name}. Checking schedule permissions...`, "ok");
+  const schedule = await fetchSchedulePermission(client, scheduleTable, studentEmail);
 
   if (!schedule) {
-    setBanner("No active schedule match for this student and UUID.", "warn");
-    appendLog("Supabase returned no active schedule row. Check table data or time window.", "error");
+    setBanner("No schedule match for this email and beacon at current time.", "warn");
+    appendLog("Schedule row missing for student_email + room_beacon_id + start_time <= now.", "error");
     return;
   }
 
   appendLog(`Schedule match found (${schedule.id}). Inserting attendance_log row...`, "ok");
-  await insertAttendance(client, attendanceTable, schedule, studentEmail, studentName, teacherDevice);
+  await insertAttendance(client, attendanceTable, studentEmail, room.room_name);
 
   setBanner("Check in successful. attendance_log updated.", "ok");
   appendLog("Attendance row inserted successfully.", "ok");
@@ -233,6 +262,9 @@ async function onCheckInClick() {
 
 function start() {
   loadSavedConfig();
+
+  el.supabaseUrl.value = DEFAULT_SUPABASE_URL;
+  el.supabaseKey.value = DEFAULT_SUPABASE_ANON_KEY;
 
   try {
     ensureBrowserSupport();

@@ -33,10 +33,6 @@
             Student Email
             <input id="studentEmail" type="email" placeholder="student@school.edu" autocomplete="email" />
           </label>
-          <label>
-            Student Name (optional)
-            <input id="studentName" type="text" placeholder="Student Name" autocomplete="name" />
-          </label>
         </div>
       </section>
 
@@ -45,15 +41,19 @@
         <div class="grid-two">
           <label>
             SUPABASE_URL
-            <input id="supabaseUrl" type="url" placeholder="https://your-project.supabase.co" />
+            <input id="supabaseUrl" type="url" value="https://owwgynnsjwcltoxmkcfl.supabase.co" />
           </label>
           <label>
-            SUPABASE_PUBLISHABLE_KEY
-            <input id="supabaseKey" type="password" placeholder="sb_publishable_..." />
+            SUPABASE_ANON_KEY
+            <input id="supabaseKey" type="password" value="sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG" />
           </label>
           <label>
             Schedule Table
-            <input id="scheduleTable" type="text" value="student_schedule" />
+            <input id="scheduleTable" type="text" value="schedule" />
+          </label>
+          <label>
+            Rooms Table
+            <input id="roomsTable" type="text" value="rooms" />
           </label>
           <label>
             Attendance Table
@@ -74,6 +74,7 @@
           <li>Open this app over HTTPS (GitHub Pages is valid) or localhost.</li>
           <li>Keep Bluetooth on and place teacher iPhone beacon in discoverable mode.</li>
           <li>Add your GitHub Pages URL in Supabase API CORS allowed origins.</li>
+          <li>Schedule match rule: student_email + room_beacon_id + start_time &lt;= current time.</li>
         </ul>
       </section>
 
