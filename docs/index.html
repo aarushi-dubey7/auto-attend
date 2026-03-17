@@ -26,61 +26,105 @@
         <p id="capabilityStatus" class="status-pill">Checking browser capabilities...</p>
       </section>
 
-      <section class="panel">
-        <h2>Student Input</h2>
-        <div class="grid-two">
-          <label>
-            Student Email
-            <input id="studentEmail" type="email" placeholder="student@school.edu" autocomplete="email" />
-          </label>
+      <section class="tabs-shell">
+        <div class="tab-list" role="tablist" aria-label="App sections">
+          <button
+            id="checkInTabBtn"
+            class="tab-btn is-active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="checkInTabPanel"
+            data-tab-target="checkInTabPanel"
+          >
+            Check In
+          </button>
+          <button
+            id="supabaseTabBtn"
+            class="tab-btn"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="supabaseTabPanel"
+            data-tab-target="supabaseTabPanel"
+          >
+            Supabase + Event Log
+          </button>
         </div>
-      </section>
 
-      <section class="panel">
-        <h2>Supabase Connection</h2>
-        <div class="grid-two">
-          <label>
-            SUPABASE_URL
-            <input id="supabaseUrl" type="url" value="https://owwgynnsjwcltoxmkcfl.supabase.co" />
-          </label>
-          <label>
-            SUPABASE_ANON_KEY
-            <input id="supabaseKey" type="password" value="sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG" />
-          </label>
-          <label>
-            Schedule Table
-            <input id="scheduleTable" type="text" value="schedule" />
-          </label>
-          <label>
-            Rooms Table
-            <input id="roomsTable" type="text" value="rooms" />
-          </label>
-          <label>
-            Attendance Table
-            <input id="attendanceTable" type="text" value="attendance_log" />
-          </label>
+        <div id="checkInTabPanel" class="tab-panel is-active" role="tabpanel" aria-labelledby="checkInTabBtn">
+          <section class="panel">
+            <h2>Student Input</h2>
+            <div class="grid-two">
+              <label>
+                Student Email
+                <input
+                  id="studentEmail"
+                  type="email"
+                  placeholder="lexample30@bhpsnj.org"
+                  autocomplete="email"
+                  pattern="[^@\s]+@bhpsnj\.org"
+                  title="Use a school email ending in @bhpsnj.org"
+                />
+              </label>
+            </div>
+          </section>
+
+          <section class="panel action-panel">
+            <button id="checkInBtn" class="check-in-btn">Check In</button>
+            <p id="resultBanner" class="result-banner neutral">Ready</p>
+          </section>
+
+          <section class="panel">
+            <h2>Troubleshooting</h2>
+            <ul class="tips">
+              <li>Open this app over HTTPS (GitHub Pages is valid) or localhost.</li>
+              <li>Keep Bluetooth on and place teacher iPhone beacon in discoverable mode.</li>
+              <li>Add your GitHub Pages URL in Supabase API CORS allowed origins.</li>
+              <li>Schedule match rule: student_email + room_beacon_id + start_time &lt;= current time.</li>
+            </ul>
+          </section>
         </div>
-        <p class="note">Use only a publishable key in this page. Do not use a service-role key.</p>
-      </section>
 
-      <section class="panel action-panel">
-        <button id="checkInBtn" class="check-in-btn">Check In</button>
-        <p id="resultBanner" class="result-banner neutral">Ready</p>
-      </section>
+        <div id="supabaseTabPanel" class="tab-panel" role="tabpanel" aria-labelledby="supabaseTabBtn" hidden>
+          <section class="panel">
+            <h2>Supabase Configuration</h2>
+            <div class="config-guard">
+              <button id="unlockConfigBtn" class="secondary-btn" type="button">Unlock Settings</button>
+              <p id="configGuardMessage" class="guard-message">
+                Settings are locked. Click Unlock Settings to confirm before editing.
+              </p>
+            </div>
+            <div class="grid-two">
+              <label>
+                SUPABASE_URL
+                <input id="supabaseUrl" type="url" value="https://owwgynnsjwcltoxmkcfl.supabase.co" readonly />
+              </label>
+              <label>
+                SUPABASE_ANON_KEY
+                <input id="supabaseKey" type="password" value="sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG" readonly />
+              </label>
+              <label>
+                Schedule Table
+                <input id="scheduleTable" type="text" value="schedule" readonly />
+              </label>
+              <label>
+                Rooms Table
+                <input id="roomsTable" type="text" value="rooms" readonly />
+              </label>
+              <label>
+                Attendance Table
+                <input id="attendanceTable" type="text" value="attendance_log" readonly />
+              </label>
+            </div>
+            <p class="note">Use only a publishable key in this page. Do not use a service-role key.</p>
+          </section>
 
-      <section class="panel">
-        <h2>Troubleshooting</h2>
-        <ul class="tips">
-          <li>Open this app over HTTPS (GitHub Pages is valid) or localhost.</li>
-          <li>Keep Bluetooth on and place teacher iPhone beacon in discoverable mode.</li>
-          <li>Add your GitHub Pages URL in Supabase API CORS allowed origins.</li>
-          <li>Schedule match rule: student_email + room_beacon_id + start_time &lt;= current time.</li>
-        </ul>
-      </section>
-
-      <section class="panel">
-        <h2>Event Log</h2>
-        <ul id="eventLog" class="event-log"></ul>
+          <section class="panel">
+            <h2>Event Log</h2>
+            <ul id="eventLog" class="event-log"></ul>
+          </section>
+        </div>
       </section>
     </main>
 

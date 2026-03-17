@@ -46,6 +46,72 @@ body {
 	gap: 1rem;
 }
 
+.tabs-shell {
+	display: grid;
+	gap: 0.9rem;
+}
+
+.tab-list {
+	display: inline-flex;
+	width: fit-content;
+	gap: 0.35rem;
+	padding: 0.35rem;
+	border-radius: 14px;
+	background: rgba(16, 37, 61, 0.09);
+	border: 1px solid rgba(16, 37, 61, 0.12);
+	box-shadow: var(--shadow);
+}
+
+.tab-btn {
+	border: 0;
+	border-radius: 10px;
+	padding: 0.5rem 0.9rem;
+	font-family: "Space Grotesk", sans-serif;
+	font-size: 0.88rem;
+	font-weight: 700;
+	color: var(--ink);
+	background: transparent;
+	cursor: pointer;
+	transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.tab-btn:hover {
+	background: rgba(16, 37, 61, 0.1);
+	transform: translateY(-1px);
+}
+
+.tab-btn:focus-visible {
+	outline: 2px solid rgba(11, 138, 111, 0.28);
+	outline-offset: 2px;
+}
+
+.tab-btn.is-active {
+	color: #fff;
+	background: linear-gradient(120deg, var(--brand), var(--brand-strong));
+	box-shadow: 0 8px 16px rgba(6, 111, 89, 0.22);
+}
+
+.tab-panel {
+	display: none;
+	gap: 1rem;
+}
+
+.tab-panel.is-active {
+	display: grid;
+	animation: tab-enter 180ms ease-out;
+}
+
+@keyframes tab-enter {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
 .panel {
 	background: var(--panel);
 	border: 1px solid var(--panel-border);
@@ -134,6 +200,12 @@ input {
 	color: var(--ink);
 }
 
+input[readonly] {
+	background: rgba(16, 37, 61, 0.07);
+	color: rgba(16, 37, 61, 0.74);
+	cursor: not-allowed;
+}
+
 input:focus {
 	outline: 2px solid rgba(11, 138, 111, 0.28);
 	border-color: var(--brand);
@@ -143,6 +215,37 @@ input:focus {
 	display: grid;
 	justify-items: start;
 	gap: 0.7rem;
+}
+
+.config-guard {
+	display: grid;
+	gap: 0.45rem;
+	margin-bottom: 0.8rem;
+}
+
+.secondary-btn {
+	border: 1px solid rgba(16, 37, 61, 0.24);
+	border-radius: 10px;
+	padding: 0.56rem 0.86rem;
+	font-family: "Space Grotesk", sans-serif;
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--ink);
+	background: rgba(255, 255, 255, 0.7);
+	cursor: pointer;
+	transition: transform 0.14s ease, background 0.14s ease;
+}
+
+.secondary-btn:hover {
+	transform: translateY(-1px);
+	background: rgba(255, 255, 255, 0.92);
+}
+
+.guard-message {
+	margin: 0;
+	font-size: 0.84rem;
+	font-weight: 600;
+	color: var(--warn);
 }
 
 .check-in-btn {
@@ -236,6 +339,16 @@ input:focus {
 }
 
 @media (max-width: 720px) {
+	.tab-list {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		width: 100%;
+	}
+
+	.tab-btn {
+		width: 100%;
+	}
+
 	.grid-two {
 		grid-template-columns: 1fr;
 	}
