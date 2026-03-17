@@ -1,0 +1,247 @@
+:root {
+	--bg: #f4f1ea;
+	--panel: rgba(255, 255, 255, 0.86);
+	--panel-border: rgba(19, 47, 76, 0.12);
+	--ink: #10253d;
+	--muted: #3a556f;
+	--brand: #0b8a6f;
+	--brand-strong: #066f59;
+	--warn: #b65a22;
+	--error: #c53a25;
+	--ok: #157347;
+	--shadow: 0 18px 36px rgba(16, 37, 61, 0.1);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: "Manrope", sans-serif;
+	color: var(--ink);
+	background:
+		radial-gradient(circle at 84% 18%, rgba(11, 138, 111, 0.2), transparent 38%),
+		radial-gradient(circle at 16% 88%, rgba(182, 90, 34, 0.18), transparent 44%),
+		var(--bg);
+}
+
+.bg-orb {
+	position: fixed;
+	right: -180px;
+	top: -110px;
+	width: 420px;
+	height: 420px;
+	border-radius: 50%;
+	background: conic-gradient(from 220deg, rgba(11, 138, 111, 0.32), rgba(182, 90, 34, 0.24));
+	filter: blur(36px);
+	z-index: -1;
+}
+
+.app-shell {
+	width: min(940px, 92vw);
+	margin: 2rem auto 3rem;
+	display: grid;
+	gap: 1rem;
+}
+
+.panel {
+	background: var(--panel);
+	border: 1px solid var(--panel-border);
+	border-radius: 16px;
+	padding: 1rem 1.1rem;
+	box-shadow: var(--shadow);
+	backdrop-filter: blur(10px);
+}
+
+h1,
+h2 {
+	font-family: "Space Grotesk", sans-serif;
+	margin: 0;
+}
+
+h1 {
+	font-size: clamp(1.4rem, 2.3vw, 2.1rem);
+	margin-top: 0.3rem;
+}
+
+h2 {
+	font-size: 1rem;
+	margin-bottom: 0.7rem;
+}
+
+p {
+	margin: 0.4rem 0;
+	color: var(--muted);
+}
+
+.tag {
+	display: inline-block;
+	background: #10253d;
+	color: #f5f9ff;
+	border-radius: 999px;
+	font-size: 0.76rem;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	padding: 0.25rem 0.6rem;
+}
+
+.status-pill {
+	display: inline-flex;
+	margin-top: 0.6rem;
+	padding: 0.3rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #fff;
+	background: #4f6070;
+}
+
+.status-pill.ok {
+	background: var(--ok);
+}
+
+.status-pill.warn {
+	background: var(--warn);
+}
+
+.status-pill.error {
+	background: var(--error);
+}
+
+.grid-two {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.8rem;
+}
+
+label {
+	display: grid;
+	gap: 0.3rem;
+	color: var(--muted);
+	font-size: 0.9rem;
+	font-weight: 600;
+}
+
+input {
+	width: 100%;
+	border: 1px solid rgba(16, 37, 61, 0.2);
+	border-radius: 11px;
+	padding: 0.62rem 0.72rem;
+	font-size: 0.95rem;
+	background: rgba(255, 255, 255, 0.88);
+	color: var(--ink);
+}
+
+input:focus {
+	outline: 2px solid rgba(11, 138, 111, 0.28);
+	border-color: var(--brand);
+}
+
+.action-panel {
+	display: grid;
+	justify-items: start;
+	gap: 0.7rem;
+}
+
+.check-in-btn {
+	border: 0;
+	border-radius: 12px;
+	padding: 0.74rem 1.1rem;
+	font-family: "Space Grotesk", sans-serif;
+	font-size: 1rem;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+	color: #fff;
+	background: linear-gradient(120deg, var(--brand), var(--brand-strong));
+	cursor: pointer;
+	transition: transform 0.14s ease, filter 0.14s ease;
+}
+
+.check-in-btn:hover {
+	transform: translateY(-1px);
+	filter: brightness(1.04);
+}
+
+.check-in-btn:disabled {
+	cursor: progress;
+	opacity: 0.8;
+}
+
+.result-banner {
+	min-height: 1.4rem;
+	margin: 0;
+	font-weight: 700;
+}
+
+.result-banner.neutral {
+	color: var(--muted);
+}
+
+.result-banner.ok {
+	color: var(--ok);
+}
+
+.result-banner.warn {
+	color: var(--warn);
+}
+
+.result-banner.error {
+	color: var(--error);
+}
+
+.note {
+	margin-top: 0.7rem;
+	font-size: 0.86rem;
+}
+
+.tips {
+	margin: 0.2rem 0 0;
+	padding-left: 1rem;
+	color: var(--muted);
+}
+
+.tips li {
+	margin: 0.2rem 0;
+}
+
+.event-log {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	display: grid;
+	gap: 0.35rem;
+	max-height: 250px;
+	overflow: auto;
+}
+
+.event-log li {
+	border-radius: 9px;
+	background: rgba(16, 37, 61, 0.06);
+	padding: 0.42rem 0.55rem;
+	font-family: "ui-monospace", "SFMono-Regular", Menlo, Consolas, monospace;
+	font-size: 0.79rem;
+	color: #213f5d;
+}
+
+.event-log li.error {
+	background: rgba(197, 58, 37, 0.13);
+	color: #842a1f;
+}
+
+.event-log li.ok {
+	background: rgba(21, 115, 71, 0.12);
+	color: #125837;
+}
+
+@media (max-width: 720px) {
+	.grid-two {
+		grid-template-columns: 1fr;
+	}
+
+	.app-shell {
+		width: min(94vw, 940px);
+		margin-top: 1rem;
+	}
+}

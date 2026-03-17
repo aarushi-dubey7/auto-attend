@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Environment and local secrets
+.env
+*.env
+backend/.env
+
+# Local runtime artifacts
+backend/local_events.jsonl
+
+# OS/editor noise
+.DS_Store
+.vscode/
