@@ -6,7 +6,7 @@ Phase-1 prototype for Chromebook attendance using Web Bluetooth + Supabase, depl
 
 - Web app with one `Check In` button.
 - Scan for teacher beacon service UUID `0000181c-0000-1000-8000-00805f9b34fb`.
-- Validate the UUID in `rooms`, then check `schedule` for `student_email + room_beacon_id + start_time <= current time`.
+- Validate the UUID in `rooms`, then check `schedule` for `student_email + room_beacon_id + start_time <= current time <= end_time`.
 - If scheduled, insert attendance row into `attendance_log`.
 - No FastAPI in this phase.
 
@@ -24,10 +24,28 @@ Phase-1 prototype for Chromebook attendance using Web Bluetooth + Supabase, depl
 3. Confirm tables exist: `rooms`, `schedule`, `attendance_log`.
 4. Insert or verify rows in:
    - `rooms`: `room_name`, `beacon_uuid`
-   - `schedule`: `student_email`, `room_beacon_id`, `start_time`
+	- `schedule`: `student_email`, `room_beacon_id`, `start_time`, `end_time`
 4. In Supabase API settings, add your GitHub Pages origin to CORS allowed origins:
 	- `https://<your-github-username>.github.io`
 	- If repo pages path is required, still add only origin (no path).
+
+## Schedule + Time Rules
+
+- Matching window: `student_email + room_beacon_id + start_time <= now <= end_time`.
+- Boundary grace for scan latency: `20 seconds` at both window edges.
+- Late threshold in app logic: class `start_time + 2 minutes passing time + 20 seconds`.
+- Keep school schedule data and browser/device clock in the same timezone.
+
+Configured daily bell windows in sample SQL:
+
+- Period 1: `08:17` - `09:13`
+- Period 2: `09:15` - `10:08`
+- Period 3: `10:10` - `11:03`
+- EP: `11:05` - `11:35`
+- Lunch: `11:40` - `12:10`
+- Period 4: `12:12` - `13:05`
+- Period 5: `13:07` - `14:00`
+- Period 6: `14:02` - `14:55`
 
 ## Local Run (Quick Test)
 

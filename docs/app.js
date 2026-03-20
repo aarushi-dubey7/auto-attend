@@ -2,6 +2,8 @@ const REQUIRED_SERVICE_UUID = "0000181c-0000-1000-8000-00805f9b34fb";
 const DEFAULT_SUPABASE_URL = "https://owwgynnsjwcltoxmkcfl.supabase.co";
 const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_P8f4keTbxpm8M5JnjQOYVA_EBjPDKWG";
 const REQUIRED_EMAIL_DOMAIN = "@bhpsnj.org";
+const PASSING_PERIOD_SECONDS = 120;
+const SIGNAL_GRACE_SECONDS = 20;
 
 const el = {
   capabilityStatus: document.querySelector("#capabilityStatus"),
@@ -28,11 +30,24 @@ function nowStamp() {
 }
 
 function currentLocalTime() {
-  const now = new Date();
+  return currentLocalTimeWithOffset(0);
+}
+
+function currentLocalTimeWithOffset(offsetSeconds) {
+  const now = new Date(Date.now() + offsetSeconds * 1000);
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   const ss = String(now.getSeconds()).padStart(2, "0");
   return `${hh}:${mm}:${ss}`;
+}
+
+function classifyAttendanceStatus(scheduleStartTime) {
+  const [hours, minutes, seconds = "0"] = scheduleStartTime.split(":");
+  const now = new Date();
+  const onTimeDeadline = new Date(now);
+  onTimeDeadline.setHours(Number(hours), Number(minutes), Number(seconds), 0);
+  onTimeDeadline.setSeconds(onTimeDeadline.getSeconds() + PASSING_PERIOD_SECONDS + SIGNAL_GRACE_SECONDS);
+  return now <= onTimeDeadline ? "Present" : "Late";
 }
 
 function appendLog(message, level = "neutral") {
@@ -228,14 +243,16 @@ async function fetchRoomByBeacon(client, table) {
 }
 
 async function fetchSchedulePermission(client, table, studentEmail) {
-  const timeNow = currentLocalTime();
+  const timeNowUpper = currentLocalTimeWithOffset(SIGNAL_GRACE_SECONDS);
+  const timeNowLower = currentLocalTimeWithOffset(-SIGNAL_GRACE_SECONDS);
 
   const { data, error } = await client
     .from(table)
-    .select("id, student_email, room_beacon_id, start_time")
+    .select("id, student_email, room_beacon_id, start_time, end_time")
     .eq("student_email", studentEmail)
     .eq("room_beacon_id", REQUIRED_SERVICE_UUID)
-    .lte("start_time", timeNow)
+    .lte("start_time", timeNowUpper)
+    .gte("end_time", timeNowLower)
     .order("start_time", { ascending: false })
     .limit(1);
 
@@ -250,11 +267,11 @@ async function fetchSchedulePermission(client, table, studentEmail) {
   return data[0];
 }
 
-async function insertAttendance(client, table, studentEmail, roomName) {
+async function insertAttendance(client, table, studentEmail, roomName, status) {
   const payload = {
     student_email: studentEmail,
     room_name: roomName,
-    status: "Present",
+    status,
   };
 
   const { error } = await client.from(table).insert(payload);
@@ -300,14 +317,22 @@ async function runCheckIn() {
 
   if (!schedule) {
     setBanner("No schedule match for this email and beacon at current time.", "warn");
-    appendLog("Schedule row missing for student_email + room_beacon_id + start_time <= now.", "error");
+    appendLog(
+      "Schedule row missing for student_email + room_beacon_id + start_time <= now(+20s) <= end_time with 20s grace.",
+      "error"
+    );
     return;
   }
 
-  appendLog(`Schedule match found (${schedule.id}). Inserting attendance_log row...`, "ok");
-  await insertAttendance(client, attendanceTable, studentEmail, room.room_name);
+  const attendanceStatus = classifyAttendanceStatus(schedule.start_time);
 
-  setBanner("Check in successful. attendance_log updated.", "ok");
+  appendLog(
+    `Schedule match found (${schedule.id}) ${schedule.start_time}-${schedule.end_time}. Inserting attendance_log row as ${attendanceStatus}...`,
+    "ok"
+  );
+  await insertAttendance(client, attendanceTable, studentEmail, room.room_name, attendanceStatus);
+
+  setBanner(`Check in successful. attendance_log updated as ${attendanceStatus}.`, "ok");
   appendLog("Attendance row inserted successfully.", "ok");
   saveConfig();
 }

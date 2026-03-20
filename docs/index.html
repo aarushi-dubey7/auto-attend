@@ -81,7 +81,8 @@
               <li>Open this app over HTTPS (GitHub Pages is valid) or localhost.</li>
               <li>Keep Bluetooth on and place teacher iPhone beacon in discoverable mode.</li>
               <li>Add your GitHub Pages URL in Supabase API CORS allowed origins.</li>
-              <li>Schedule match rule: student_email + room_beacon_id + start_time &lt;= current time.</li>
+              <li>Schedule match rule: student_email + room_beacon_id + start_time &lt;= current time &lt;= end_time (20s grace on boundaries).</li>
+              <li>Late threshold: after class start + 2 min passing period + 20s signal grace.</li>
             </ul>
           </section>
         </div>
